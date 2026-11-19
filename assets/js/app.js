@@ -81,14 +81,20 @@
     '<circle cx="32" cy="32" r="22" fill="none" stroke="currentColor" stroke-width="3"/>' +
     '<text x="32" y="40" text-anchor="middle" font-family="Georgia, \'Times New Roman\', serif" font-weight="700" font-size="22" fill="currentColor">LL</text>' +
     "</svg>";
-
+  
   /* ---------- cabeçalho e rodapé ---------- */
-  var NAV = [
+ var NAV = [
     ["o-que-somos.html", "nav.about"],
     ["como-funciona.html", "nav.how"],
     ["eventos.html", "nav.events"],
     ["parcerias.html", "nav.partners"],
     ["contato.html", "nav.contact"]
+  ];
+  var EXTRA_PAGES = [
+    ["index.html", "brand.home"],
+    ["carimbos.html", "stamps.title"],
+    ["participar.html", "join.title"],
+    ["faq.html", "faq.title"]
   ];
 
   function renderChrome() {
@@ -101,6 +107,18 @@
         var cur = n[0] === page ? ' aria-current="page"' : "";
         return '<li><a href="' + n[0] + '"' + cur + ">" + esc(t(n[1])) + "</a></li>";
       }).join("");
+
+      var allLinks = [EXTRA_PAGES[0]].concat(NAV, EXTRA_PAGES.slice(1)).map(function (n) {
+        var cur = n[0] === page ? ' aria-current="page"' : "";
+        var label = t(n[1]).replace(/^LimLanguage,\s*/i, "");
+        label = label.charAt(0).toUpperCase() + label.slice(1);
+        return '<li><a href="' + n[0] + '"' + cur + ">" + esc(label) + "</a></li>";
+      }).join("");
+
+      var listIconSVG = '<svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">' +
+        [5, 10, 15, 20].map(function (y) {
+          return '<circle cx="4" cy="' + y + '" r="1.8"/><rect x="8" y="' + (y - 1.5) + '" width="13" height="3" rx="1.5"/>';
+        }).join("") + "</svg>";
 
       var langBtns = LANGS.map(function (c) {
         var names = { pt: "Português", es: "Español", en: "English" };
@@ -124,6 +142,12 @@
             '<select class="theme-select" id="theme-select">' + themeOpts + "</select></div>" +
         "</div></div>" +
         '<div class="main-bar"><div class="wrap">' +
+          '<div class="menu-paginas" id="menu-paginas">' +
+            '<button type="button" class="btn-lista" id="btn-lista-paginas" aria-label="Todas as páginas" aria-expanded="false">' +
+              listIconSVG +
+            "</button>" +
+            '<ul class="dropdown-paginas" id="dropdown-paginas">' + allLinks + "</ul>" +
+          "</div>" +
           '<a class="brand" href="index.html" aria-label="' + esc(t("brand.home")) + '">' + LOGO +
             '<span class="brand-name">LimLanguage</span></a>' +
           '<a class="btn btn-primary btn-small" id="header-cta" href="' + esc(ctaHref()) + '">' + esc(t("cta.join")) + "</a>" +
@@ -131,7 +155,7 @@
             esc(t("nav.menu")) + "</button>" +
           '<nav class="site-nav" id="site-nav" aria-label="' + esc(t("nav.label")) + '"><ul>' + links + "</ul></nav>" +
         "</div></div>";
-
+    
       header.querySelectorAll("[data-lang]").forEach(function (b) {
         b.addEventListener("click", function () { setLang(b.getAttribute("data-lang")); });
       });
@@ -144,6 +168,38 @@
       });
       nav.addEventListener("click", function (e) {
         if (e.target.tagName === "A") { nav.classList.remove("open"); toggle.setAttribute("aria-expanded", "false"); }
+      });
+
+      var btnLista = document.getElementById("btn-lista-paginas");
+      var dropPaginas = document.getElementById("dropdown-paginas");
+      var menuPaginas = document.getElementById("menu-paginas");
+      var timerMenu;
+      var fixado = false;
+
+      btnLista.addEventListener("click", function (e) {
+        e.stopPropagation();
+        fixado = !fixado;
+        dropPaginas.classList.toggle("ativo", fixado);
+        btnLista.setAttribute("aria-expanded", String(fixado));
+      });
+
+      menuPaginas.addEventListener("mouseenter", function () {
+        clearTimeout(timerMenu);
+        dropPaginas.classList.add("ativo");
+      });
+
+      menuPaginas.addEventListener("mouseleave", function () {
+        if (fixado) return; // Se foi aberto por clique, não fecha ao tirar o mouse
+        timerMenu = setTimeout(function () {
+          dropPaginas.classList.remove("ativo");
+          btnLista.setAttribute("aria-expanded", "false");
+        }, 150);
+      });
+
+      document.addEventListener("click", function () {
+        fixado = false;
+        dropPaginas.classList.remove("ativo");
+        btnLista.setAttribute("aria-expanded", "false");
       });
     }
 
